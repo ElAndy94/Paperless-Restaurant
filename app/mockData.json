@@ -1,0 +1,27 @@
+[
+    {
+        "item_id": "101",
+        "item_name": "food 1",
+        "item_price": "1.99"
+    },
+    {
+        "item_id": "102",
+        "item_name": "food 2",
+        "item_price": "2.99"
+    },
+    {
+        "item_id": "103",
+        "item_name": "food 3",
+        "item_price": "3.99"
+    },
+    {
+        "item_id": "104",
+        "item_name": "food 4",
+        "item_price": "4.99"
+    },
+    {
+        "item_id": "105",
+        "item_name": "food 5",
+        "item_price": "5.99"
+    }
+]

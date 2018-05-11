@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible"
+        card-content="IE=edge,chrome=1">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>Counter View</title>
+</head>
+
+<body>
+  <!-- ========= -->
+  <!-- Your HTML -->
+  <!-- ========= -->
+  <div class="section">
+    <div class="container"
+         id="app">
+
+      <div class="columns">
+        <div class="column is-8 is-offset-2">
+          <h1 class="title">Counter</h1>
+          <div class="columns is-mobile is-multiline is-centered"
+               id="tables">
+            <div class="column is-3 is-2-widescreen"
+                 v-for="t in tables">
+              <button id="btn"
+                      class="button is-fullwidth"
+                      @click="showTableOrder(t._id)"
+                      v-bind:class="{ 'is-active': currentBill.tableNo === t._id,  'is-info': t.occupied, 'is-warning': t.status === 'cooking', 'is-danger': t.status === 'ready', 'is-success': t.status === 'served'}">{{t._id}}</button>
+            </div>
+          </div>
+          <br>
+          <div class="columns">
+            <div class="column is-10 is-offset-1">
+              <div id="selectTable">
+
+                <select-table v-if="!selected"></select-table>
+                <empty-table v-if="empty"></empty-table>
+
+                <div v-if="selectedAndNotEmpty()"
+                     class="content box">
+
+                  <table class="table is-bordered">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Item Total</h>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in this.currentBill.order">
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.price | currency('£') }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price * item.quantity | currency('£') }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <br>
+
+                  <div class="columns">
+
+                    <div class="column">
+                      <h4>Table No: {{ this.currentBill.tableNo }} </h4>
+                      <h4>Order Status: {{ capitalizeFirstLetter }}</h4>
+                      <h4>Order No: {{ this.currentBill.orderNo.substr(0,8) }}</h4>
+                    </div>
+
+                    <div class="column">
+                      <table class="table is-narrow is-bordered">
+                        <tbody>
+                          <tr>
+                            <th>TOTAL:</th>
+                            <th>{{ this.currentBill.totalPreTax | currency('£') }}</th>
+                          </tr>
+                          <tr>
+                            <th>VAT @ 20%:</th>
+                            <th>{{ this.currentBill.vatAmount | currency('£') }}</th>
+                          </tr>
+                          <tr>
+                            <th>TOTAL + VAT:</th>
+                            <th>{{ this.currentBill.totalPostTax | currency('£') }}
+                            </th>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div>
+
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <nav class="level">
+                    <!-- Left side -->
+                    <div class="level-left">
+                      <div class="columns">
+                        <div class="column"></div>
+                        <div class="column is-narrow">
+                          <form>
+                            <div class="field">
+                              <div class="control">
+                                <input class="input"
+                                       type="text"
+                                       v-model="discount"
+                                       placeholder="% discount">
+                              </div>
+                            </div>
+                            <div class="field">
+                              <div class="control">
+                                <input class="input"
+                                       type="password"
+                                       v-model="adminPass"
+                                       placeholder="Password">
+                              </div>
+                            </div>
+                            <div class="field">
+                              <div class="control">
+                                <a class="button is-warning is-fullwidth"
+                                   @click="applyDiscount()">
+                                  <span class="icon is-small">
+                                    <i class="fas fa-pound-sign"></i>
+                                  </span>
+                                  <span>Discount</span>
+                                </a>
+                              </div>
+                            </div>
+                            <p v-for="error in errors">{{error}}</p>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right side -->
+                    <div class="level-right">
+                      <div class="columns">
+                        <div class="column">
+                          <button @click="receiptToggle()"
+                                  class="button is-warning mobile-is-fullwidth desktop-is-pulled-right">
+                            <span class="icon is-small">
+                              <!-- <i class="fas fa-check"></i> -->
+                              <i class="fas fa-clipboard-list"></i>
+                            </span>
+                            <span>{{this.showHide}} Receipt</span>
+                          </button>
+                        </div>
+                        <div class="column">
+                          <button @click="completeOrder"
+                                  :disabled="currentBill.status !== 'served'"
+                                  class="button is-success desktop-is-pulled-right">
+                            <span class="icon is-small">
+                              <i class="fas fa-check"></i>
+                            </span>
+                            <span>Complete Order</span>
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </nav>
+
+                  <div class="columns"
+                       v-if="showReceipt === true">
+                    <div class="column"></div>
+                    <div class="column is-narrow box">
+                      <p class="has-text-centered"></p>
+                      <p class="has-text-centered">{{ this.getCurrentTime() }}</p>
+                      <table class="table is-narrow">
+                        <thead>
+                          <td>Name</td>
+                          <td>Qty</td>
+                          <td>Price</td>
+                        </thead>
+                        <tbody>
+                          <tr v-for="item in this.currentBill.order">
+                            <td>{{item.name}}</td>
+                            <td>{{item.quantity}}</td>
+                            <td>{{item.price * item.quantity | currency('£')}}</td>
+                          </tr>
+                          <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                          <tr>
+                            <th>VAT@20.00%</th>
+                            <th></th>
+                            <th>{{this.currentBill.vatAmount | currency('£')}}</th>
+                          </tr>
+                          <tr>
+                            <th>Pre-tax</th>
+                            <th></th>
+                            <th>{{this.currentBill.totalPreTax | currency('£')}}</th>
+                          </tr>
+                          <tr>
+                            <th>Total</th>
+                            <th></th>
+                            <th>{{this.currentBill.totalPostTax | currency('£')}}</h>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <p class="has-text-centered">Thank you for dining with us.</p>
+                      <a class="button is-warning is-fullwidth">
+                        <span class="icon is-small">
+                          <i class="fas fa-print"></i>
+                        </span>
+                        <span>Print</span>
+                      </a>
+                    </div>
+                    <div class="column"></div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <br>
+
+          <div class="columns">
+            <div class="column"></div>
+            <div class="column is-narrow">
+              <a @click="orderHistoryToggle()"
+                 class="button is-link is-fullwidth">
+                <span class="icon is-small">
+                  <i class="fas fa-history"></i>
+                </span>
+                <span>{{this.showHideOrder}} Order History</span>
+              </a>
+            </div>
+            <div class="column"></div>
+          </div>
+
+          <div class="columns"
+               v-if="orderHistory === true">
+            <div class="column"></div>
+            <div class="column is-narrow">
+              <div class="columns box box-margin"
+                   v-for="order in this.paidOrders">
+                <div class="column">
+                  <p>Order:{{order._id.substr(0,8)}}</p>
+                  <p>Table:{{order.table}}</p>
+                  <p>Date:{{order.date}}</p>
+                  <p>Total (PreTax): {{order.bill.totalPreTax | currency('£')}}</p>
+                  <p>VAT: {{order.bill.vatAmount | currency('£')}}</p>
+                  <p>Total (PostTax): {{order.bill.totalPostTax | currency('£')}}</p>
+                </div>
+                <div class="column">
+                  <table class="table is-narrow">
+                    <thead>
+                      <td>Name</td>
+                      <td>Qty</td>
+                      <td>Price</td>
+                    </thead>
+                    <tbody>
+                      <tr v-for="item in order.order">
+                        <td>{{item.name}}</td>
+                        <td>{{item.quantity}}</td>
+                        <td>{{item.price * item.quantity | currency('£')}}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <a @click="orderHistoryToggle()"
+                 class="button is-link is-fullwidth">
+                <span class="icon is-small">
+                  <i class="fas fa-history"></i>
+                </span>
+                <span>{{this.showHideOrder}} Order History</span>
+              </a>
+            </div>
+            <div class="column"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- ========= -->
+    <!-- Libraries -->
+    <!-- ========= -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+    <script defer
+            src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+
+    <script src="./js/counter.js"></script>
+    <link rel="stylesheet"
+          type="text/css"
+          href="/stylesheets/counter.css">
+
+</body>
+
+</html>

@@ -1,0 +1,45 @@
+extends layout
+
+block content
+  #app
+    .section
+      .container
+        .columns
+          .column.is-8.is-offset-2
+            h2.title Kitchen
+            .box.has-text-centered(v-if="tickets.length === 0")
+              p No current orders
+            #tickets.columns.is-multiline.is-centered
+              .column.is-4(v-for="t in tickets")
+                .box
+                  div(v-if="t.status.toLowerCase() == 'cooking' && !allCoursesServed(t.order)")                  
+                    p.subtitle.has-text-centered(style="margin-bottom: .5rem") Table {{t.table}}
+                    p.has-text-centered.has-text-danger(v-if="t.elapsed.hours !== null") {{t.elapsed.hours}}:{{t.elapsed.minutes}}:{{t.elapsed.seconds}}
+                    div(v-for="course in ['starters','mains','sides','desserts']")
+                      div(v-if="getCourse(course, t.table).items.length > 0 && getCourse(course, t.table).status !== 'served'")
+                        p.label.is-capitalized {{course}}
+                        .orderItem(v-for="dish in getCourse(course, t.table).items")
+                          .columns.is-mobile
+                            .column.is-narrow
+                              input.checkbox(type="checkbox" @click="toggleReady(t.table, course, dish)" v-bind:checked="dish.status === 'ready'")
+                            .column(:class="{'has-text-success strikethrough': dish.status === 'ready'}")
+                              span(@click="toggleReady(t.table, course, dish)" style="cursor: pointer") {{dish.item.name}}
+                            .column.is-narrow
+                              span.is-pulled-right
+                                | x{{dish.quantity}}
+                        br
+                  div(v-if="t.status.toLowerCase() === 'abandoned' && !allCoursesServed(t.order)")
+                    .notification.is-danger.has-text-centered
+                      p.subtitle Order cancelled
+                      a.button.is-dark(@click="removeTicket(t)") Okay
+                  div(v-if="t.status.toLowerCase() === 'sent' && !t.updatedAt")
+                    .notification.is-success.has-text-centered
+                      p.subtitle New Order
+                      a.button.is-dark(@click="acceptTicket(t)") Accept
+                  div(v-if="t.status.toLowerCase() === 'sent' && t.updatedAt")
+                    .notification.is-success.has-text-centered
+                      p.subtitle Order Updated
+                      a.button.is-dark(@click="acceptTicket(t)") Accept
+            
+  script(src="/js/kitchen.js")
+

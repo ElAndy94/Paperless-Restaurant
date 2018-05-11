@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible"
+        content="IE=edge,chrome=1">
+  <title>Admin</title>
+</head>
+
+<body>
+  <div id="app">
+    <template v-if="loggedIn === false">
+      <div class="section">
+        <div class="container">
+
+          <div class="columns">
+            <div class="column"></div>
+            <div class="column"
+                 id="passwordText">
+              <div class="field">
+                <label class="label">Enter Password To Enter Admin Panel</label>
+                <div class="field">
+                  <p class="control has-icons-left">
+                    <input class="input"
+                           type="password"
+                           placeholder="Password"
+                           v-model="password">
+                    <span class="icon is-small is-left">
+                      <i class="fas fa-lock"></i>
+                    </span>
+                </div>
+                <div v-if="loginError.length > 0">
+                  <p class="help is-danger"
+                     v-for="error in loginError">{{error}}</p>
+                </div>
+                <p class="help"></p>
+              </div>
+              <div class="control">
+                <a @click="checkPassword()"
+                   class="button is-primary">Submit</a>
+              </div>
+            </div>
+            <div class="column"></div>
+          </div>
+        </div>
+      </div>
+    </template>
+    <template v-else-if="loggedIn === true">
+      <div class="section">
+        <div class="container">
+
+          <div class="columns">
+            <div class="column is-8 is-offset-2">
+              <h1 class="title">
+                <i class="fas fa-cog"></i>
+                Admin Panel
+              </h1>
+              <form novalidate="true">
+                <div class="menuItems content box">
+                  <div class="columns">
+                    <div class="column"></div>
+                    <div class="column is-6">
+                      <div v-if="messages.length > 0">
+                        <div class="notification is-success has-text-centered">
+                          <p v-for="item in messages">{{ item }}</p>
+                          <a @click="clearMessage(item)"
+                             class="delete"></a>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="column"></div>
+                  </div>
+                  <div class="field">
+                    <div class="columns">
+                      <div class="column">
+                        <label class="label">Food Name</label>
+                        <div class="control">
+                          <input class="input is-rounded"
+                                 type="text"
+                                 placeholder="Food Name"
+                                 v-model="newItem.name">
+                        </div>
+                      </div>
+                      <div class="column">
+                        <label class="label">Food Price</label>
+                        <div class="control">
+                          <input class="input is-rounded"
+                                 type="text"
+                                 placeholder="Food Price"
+                                 v-model="newItem.price">
+                        </div>
+                      </div>
+                      <div class="column">
+                        <label class="label">Category</label>
+                        <div class="control">
+                          <div class="select is-rounded">
+                            <select v-model="newItem.category">
+                              <option>Select Dropdown</option>
+                              <option>starter</option>
+                              <option>main</option>
+                              <option>side</option>
+                              <option>dessert</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="column">
+                        <div class="control"
+                             id="newItemButton">
+                          <a @click="addNewItem"
+                             class="button is-primary is-rounded">Add New Item</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div>
+                      <p v-if="errorsEdit.length">
+                        <b>Please correct the following error(s):</b>
+                        <ul>
+                          <li v-for="error in errorsEdit">{{ error }}</li>
+                        </ul>
+                      </p>
+                    </div>
+
+                    <p v-if="errors.length">
+                      <b>Please correct the following error(s):</b>
+                      <ul>
+                        <li v-for="error in errors">{{ error }}</li>
+                      </ul>
+                    </p>
+                  </div>
+                  <table class="table is-bordered is-striped">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Price (£)</th>
+                        <th>Category</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(foodItem, index) in filteredFoodItems"
+                          :key="index">
+                        <td>
+                          <input v-bind:class="{'is-static': !foodItem.editing}"
+                                 type="text"
+                                 class="input"
+                                 v-model="foodItem.name">
+                        </td>
+                        <td>
+                          <input v-bind:class="{'is-static': !foodItem.editing}"
+                                 type="text"
+                                 class="input"
+                                 v-model="foodItem.price">
+                        </td>
+                        <td>
+                          <div class="select is-rounded"
+                               v-if="foodItem.editing">
+                            <select v-model="foodItem.category">
+                              <option>Select Dropdown</option>
+                              <option>starter</option>
+                              <option>main</option>
+                              <option>side</option>
+                              <option>dessert</option>
+                            </select>
+                          </div>
+                          <div v-else>
+                            <input type="text"
+                                   class="input is-static"
+                                   v-bind:value="foodItem.category">
+                          </div>
+                        </td>
+                        <td>
+                          <a @click="removeItem(index)"
+                             class="button is-danger is-outlined">
+                            <span>Delete</span>
+                            <span class="icon is-small">
+                              <i class="fas fa-times"></i>
+                            </span>
+                          </a>
+                        </td>
+                        <td>
+                          <a class="button is-fullwidth"
+                             v-on:click="editItem(index)">{{ foodItem.editing ? 'Save': 'Edit' }}</a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                </div>
+              </form>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue2-filters/dist/vue2-filters.min.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css">
+  <script defer
+          src="https://use.fontawesome.com/releases/v5.0.0/js/all.js"></script>
+  <script src="/js/admin.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="/stylesheets/admin.css">
+</body>
+
+</html>

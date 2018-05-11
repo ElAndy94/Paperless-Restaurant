@@ -1,0 +1,91 @@
+extends layout
+
+block content
+  #app
+    .section
+      .container
+        .columns
+          .column.is-8.is-offset-2
+            h2.title Front of House
+            #tables.columns.is-mobile.is-multiline.is-centered
+              .column.is-3.is-2-widescreen(v-for="t in tables")
+                .button.is-fullwidth(:class="getTableClass(t)" @click="selectTable(t)")
+                  | {{t.number}}
+            .columns(v-if="currentTable")
+
+              // Side Bar
+              .column.is-narrow
+                nav.panel
+                  p.panel-heading.has-text-centered
+                    | Table {{currentTable.number}}
+                  div(v-if="currentTable.ticket.status === 'pending' || currentTable.ticket.status === 'free'")
+                    // Customer Counter
+                    .panel-block
+                      .field.has-addons(style="width: 100%;")
+                        p.control.is-expanded
+                          a.button.is-fullwidth.is-small(:disabled="this.currentTable.customers <= 0" @click="removeCustomer()" )
+                            span.icon.has-text-danger
+                              i.fas.fa-user-times
+                        p.control.is-expanded
+                          a.button.is-static.is-fullwidth.is-small
+                            span.icon
+                              i.fas.fa-users
+                            span {{currentTable.customers}}
+                        p.control.is-expanded
+                          a.button.is-fullwidth.is-small(@click="addCustomer()")
+                            span.icon.has-text-success
+                              i.fas.fa-user-plus
+                    // Search
+                    .panel-block
+                      p.control.has-icons-left
+                        input.input.is-small(v-model="searchCriteria" type="text" placeholder="search" @keyup="filterFoodItems(foodCategory, searchCriteria)")
+                        span.icon.is-small.is-left
+                          i.fas.fa-search
+                    p.panel-tabs
+                      a(:class="{'is-active': foodCategory === category}" v-for="category in ['all', 'starter', 'main', 'side', 'dessert']" @click="setCategory(category)")
+                        | {{category}}
+                    a.panel-block(v-if="foodItems.length > 0" v-for="item of filteredFoodItems" @click="addItemToOrder(item)")
+                      | {{item.name}}
+                    .panel-block
+                      button.button.is-link.is-outlined.is-fullwidth(@click="resetFilters()")
+                        | reset all filters
+                  div(v-else)
+                    .panel-block
+                      button.button.is-link.is-outlined.is-fullwidth(@click="editOrder()") Edit Order
+                    .panel-block
+                      button.button.is-danger.is-outlined.is-fullwidth(@click="clearTable()") Clear Table
+              
+              //Order details
+              .column#order-details
+                .box
+                  p.subtitle
+                    span Order Details
+                    span.is-pulled-right.is-capitalized Status: {{currentTable.ticket.status}}
+                  p.has-text-centered(v-if="emptyOrder") No items on order
+                  div(v-for="course in ['starters','mains','sides','desserts']")
+                    div(v-if="order[course].items.length > 0")
+                      p.label.is-capitalized {{course}}
+                      p Status: 
+                        span.has-text-weight-semibold(v-bind:class="{'has-text-success': order[course].status === 'served','has-text-danger': order[course].status === 'ready', 'has-text-info': order[course].status === 'pending', 'has-text-warning': order[course].status === 'cooking'}") {{order[course].status.toUpperCase()}}
+                      p.columns.is-marginless.is-mobile(v-for="orderitem in order[course].items")
+                        span.column {{orderitem.item.name}}
+                        span.column.has-text-right
+                          a.link(@click="removeItemFromOrder(orderitem.item)" v-if="pendingOrder")
+                            span.icon
+                              i.fas.fa-minus
+                          span &nbsp; x{{orderitem.quantity}} &nbsp;
+                          a.link(@click="addItemToOrder(orderitem.item)" v-if="pendingOrder")
+                            span.icon    
+                              i.fas.fa-plus
+                      .columns.is-mobile
+                        .column.is-6.is-offset-3
+                          a.button.is-success.is-fullwidth(@click="serveCourse(course)" v-if="order[course].status === 'ready'") Serve
+                
+                  br
+                  #orderControls(v-if="!emptyOrder")
+                    .columns
+                      .column.is-6.is-offset-3
+                        button.button.is-success.is-fullwidth(:disabled="currentTable.customers <= 0" @click="submitOrder()" v-if="pendingOrder") {{ currentTable.ticket._id === null ? 'Submit' : 'Update' }}
+                        button.button.is-success.is-fullwidth(v-if="currentTable.ticket.status === 'ready'" @click="servedOrder()") Food Served
+  script(src="/js/index.js")
+

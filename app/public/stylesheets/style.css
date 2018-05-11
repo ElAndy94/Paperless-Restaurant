@@ -1,0 +1,9 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css');
+
+.strikethrough {
+  text-decoration: line-through;
+}
+
+.notification {
+  padding: 1.25em;
+}
