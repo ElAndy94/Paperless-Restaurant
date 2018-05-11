@@ -1,6 +1,6 @@
-# Paperless Restraunt Application
+# Paperless Restaurant Application
 
-An application to manage restraunt orders
+An application to manage restaurant orders
 
 ## Features
 * View real time table and order details
